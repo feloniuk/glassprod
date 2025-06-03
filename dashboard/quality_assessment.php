@@ -283,4 +283,320 @@ ob_start();
                                 <td>
                                     <?= formatDateTime($assessment['assessment_date']) ?>
                                     <br>
-                                    <small class="text-muted"><?= htmlspecialchars($assessment['
+                                    <small class="text-muted"><?= htmlspecialchars($assessment['assessed_by_name']) ?></small>
+                                </td>
+                                <td>
+                                    <strong><?= htmlspecialchars($assessment['material_name']) ?></strong>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($assessment['supplier_name']) ?>
+                                    <br>
+                                    <small class="text-muted"><?= htmlspecialchars($assessment['supplier_contact']) ?></small>
+                                </td>
+                                <td>
+                                    <?= htmlspecialchars($assessment['batch_number'] ?? 'Не вказано') ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    $gradeColors = [
+                                        'premium' => 'bg-success',
+                                        'first' => 'bg-primary',
+                                        'second' => 'bg-warning',
+                                        'third' => 'bg-secondary',
+                                        'rejected' => 'bg-danger'
+                                    ];
+                                    $gradeTexts = [
+                                        'premium' => 'Преміум',
+                                        'first' => 'Перший',
+                                        'second' => 'Другий', 
+                                        'third' => 'Третій',
+                                        'rejected' => 'Відхилено'
+                                    ];
+                                    ?>
+                                    <span class="badge <?= $gradeColors[$assessment['quality_grade']] ?? 'bg-secondary' ?>">
+                                        <?= $gradeTexts[$assessment['quality_grade']] ?? $assessment['quality_grade'] ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong><?= $assessment['overall_score'] ?>/100</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        Вологість: <?= $assessment['moisture_content'] ?>%<br>
+                                        Крохмаль: <?= $assessment['starch_content'] ?>%
+                                    </small>
+                                </td>
+                                <td>
+                                    <strong><?= $assessment['alcohol_yield'] ?></strong> л/т
+                                </td>
+                                <td>
+                                    <?php if ($assessment['is_approved']): ?>
+                                        <span class="badge bg-success">Затверджено</span>
+                                    <?php elseif ($assessment['quality_grade'] === 'rejected'): ?>
+                                        <span class="badge bg-danger">Відхилено</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-warning">Очікує</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-info" 
+                                                onclick="showAssessmentDetails(<?= htmlspecialchars(json_encode($assessment)) ?>)">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        
+                                        <?php if (!$assessment['is_approved'] && $assessment['quality_grade'] !== 'rejected'): ?>
+                                            <button class="btn btn-sm btn-success" 
+                                                    onclick="approveAssessment(<?= $assessment['id'] ?>)">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" 
+                                                    onclick="showRejectModal(<?= $assessment['id'] ?>)">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<!-- Модальне вікно створення оцінки якості -->
+<div class="modal fade" id="createAssessmentModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <form method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>Нова оцінка якості зернової сировини
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="create_assessment">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Зернова сировина *</label>
+                            <select name="material_id" class="form-select" required>
+                                <option value="">Оберіть сировину</option>
+                                <?php foreach ($materials as $material): ?>
+                                    <option value="<?= $material['id'] ?>">
+                                        <?= htmlspecialchars($material['name']) ?> (<?= htmlspecialchars($material['category_name']) ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Постачальник *</label>
+                            <select name="supplier_id" class="form-select" required>
+                                <option value="">Оберіть постачальника</option>
+                                <?php foreach ($suppliers as $supplier): ?>
+                                    <option value="<?= $supplier['id'] ?>">
+                                        <?= htmlspecialchars($supplier['company_name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Номер партії</label>
+                            <input type="text" name="batch_number" class="form-control" 
+                                   placeholder="Введіть номер партії">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Дата лабораторного тесту</label>
+                            <input type="date" name="lab_test_date" class="form-control" value="<?= date('Y-m-d') ?>">
+                        </div>
+                    </div>
+                    
+                    <h6>Показники якості:</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Вологість (%) *</label>
+                            <input type="number" name="moisture_content" class="form-control" 
+                                   step="0.1" min="0" max="100" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Білок (%) *</label>
+                            <input type="number" name="protein_content" class="form-control" 
+                                   step="0.1" min="0" max="100" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Крохмаль (%) *</label>
+                            <input type="number" name="starch_content" class="form-control" 
+                                   step="0.1" min="0" max="100" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Домішки (%) *</label>
+                            <input type="number" name="impurities" class="form-control" 
+                                   step="0.1" min="0" max="100" required>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Вихід спирту (л/т) *</label>
+                            <input type="number" name="alcohol_yield" class="form-control" 
+                                   step="0.1" min="0" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Метод тестування</label>
+                            <select name="test_method" class="form-select">
+                                <option value="">Оберіть метод</option>
+                                <option value="ДСТУ 4117">ДСТУ 4117</option>
+                                <option value="ISO 712">ISO 712</option>
+                                <option value="Лабораторний аналіз">Лабораторний аналіз</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Примітки</label>
+                        <textarea name="notes" class="form-control" rows="3" 
+                                  placeholder="Додаткові примітки щодо якості сировини..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Додаткові тести</label>
+                        <textarea name="additional_tests" class="form-control" rows="2" 
+                                  placeholder="Опис додаткових тестів та їх результатів..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>Створити оцінку
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно відхилення оцінки -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">
+                        <i class="fas fa-times me-2"></i>Відхилити оцінку якості
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="action" value="reject_assessment">
+                    <input type="hidden" name="assessment_id" id="rejectAssessmentId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Причина відхилення *</label>
+                        <textarea name="reject_notes" class="form-control" rows="4" 
+                                  placeholder="Опишіть причину відхилення оцінки якості..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-1"></i>Відхилити
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно деталей оцінки -->
+<div class="modal fade" id="detailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-info-circle me-2"></i>Деталі оцінки якості
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="assessmentDetailsBody">
+                <!-- Контент буде завантажено через JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php
+$content = ob_get_clean();
+
+$additionalJS = "
+function approveAssessment(assessmentId) {
+    if (confirm('Затвердити оцінку якості?')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.style.display = 'none';
+        
+        const actionInput = document.createElement('input');
+        actionInput.name = 'action';
+        actionInput.value = 'approve_assessment';
+        
+        const assessmentIdInput = document.createElement('input');
+        assessmentIdInput.name = 'assessment_id';
+        assessmentIdInput.value = assessmentId;
+        
+        form.appendChild(actionInput);
+        form.appendChild(assessmentIdInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function showRejectModal(assessmentId) {
+    document.getElementById('rejectAssessmentId').value = assessmentId;
+    new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+
+function showAssessmentDetails(assessment) {
+    const modal = document.getElementById('detailsModal');
+    const body = document.getElementById('assessmentDetailsBody');
+    
+    const testResults = assessment.test_results ? JSON.parse(assessment.test_results) : {};
+    
+    body.innerHTML = `
+        <div class='row'>
+            <div class='col-md-6'>
+                <h6>Основна інформація</h6>
+                <table class='table table-sm'>
+                    <tr><th>Сировина:</th><td>\${assessment.material_name}</td></tr>
+                    <tr><th>Постачальник:</th><td>\${assessment.supplier_name}</td></tr>
+                    <tr><th>Партія:</th><td>\${assessment.batch_number || 'Не вказано'}</td></tr>
+                    <tr><th>Дата оцінки:</th><td>\${new Date(assessment.assessment_date).toLocaleDateString('uk-UA')}</td></tr>
+                    <tr><th>Оцінював:</th><td>\${assessment.assessed_by_name}</td></tr>
+                </table>
+            </div>
+            <div class='col-md-6'>
+                <h6>Показники якості</h6>
+                <table class='table table-sm'>
+                    <tr><th>Вологість:</th><td>\${assessment.moisture_content}%</td></tr>
+                    <tr><th>Білок:</th><td>\${assessment.protein_content}%</td></tr>
+                    <tr><th>Крохмаль:</th><td>\${assessment.starch_content}%</td></tr>
+                    <tr><th>Домішки:</th><td>\${assessment.impurities}%</td></tr>
+                    <tr><th>Вихід спирту:</th><td>\${assessment.alcohol_yield} л/т</td></tr>
+                    <tr><th>Загальна оцінка:</th><td><strong>\${assessment.overall_score}/100</strong></td></tr>
+                </table>
+            </div>
+        </div>
+        \${assessment.notes ? `<div class='mt-3'><h6>Примітки</h6><p class='bg-light p-3 rounded'>\${assessment.notes}</p></div>` : ''}
+        \${testResults.additional_tests ? `<div class='mt-3'><h6>Додаткові тести</h6><p class='bg-light p-3 rounded'>\${testResults.additional_tests}</p></div>` : ''}
+    `;
+    
+    new bootstrap.Modal(modal).show();
+}
+";
+
+renderDashboardLayout('Оцінка якості зернової сировини', $user['role'], $content, '', $additionalJS);
+?>
