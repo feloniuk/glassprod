@@ -26,6 +26,7 @@ date_default_timezone_set('Europe/Kiev');
 // Налаштування відображення помилок (для розробки)
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+ini_set('log_errors', 1);
 
 // Автозавантаження класів
 spl_autoload_register(function ($className) {

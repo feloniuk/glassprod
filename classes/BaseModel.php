@@ -27,20 +27,37 @@ class BaseModel {
         return $stmt->fetch();
     }
     
-    public function findWhere($conditions, $orderBy = 'id DESC') {
+    public function findWhere($conditions, $orderBy = 'id DESC', $limit = null) {
         $whereClause = '';
         $params = [];
         
         if (!empty($conditions)) {
             $whereParts = [];
             foreach ($conditions as $field => $value) {
-                $whereParts[] = "{$field} = ?";
-                $params[] = $value;
+                if (is_array($value)) {
+                    // Для масивів використовуємо IN оператор
+                    if (!empty($value)) {
+                        $placeholders = str_repeat('?,', count($value) - 1) . '?';
+                        $whereParts[] = "{$field} IN ({$placeholders})";
+                        foreach ($value as $val) {
+                            $params[] = $val;
+                        }
+                    }
+                } else {
+                    $whereParts[] = "{$field} = ?";
+                    $params[] = $value;
+                }
             }
-            $whereClause = 'WHERE ' . implode(' AND ', $whereParts);
+            if (!empty($whereParts)) {
+                $whereClause = 'WHERE ' . implode(' AND ', $whereParts);
+            }
         }
         
         $sql = "SELECT * FROM {$this->table} {$whereClause} ORDER BY {$orderBy}";
+        if ($limit) {
+            $sql .= " LIMIT {$limit}";
+        }
+        
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();
@@ -91,10 +108,23 @@ class BaseModel {
         if (!empty($conditions)) {
             $whereParts = [];
             foreach ($conditions as $field => $value) {
-                $whereParts[] = "{$field} = ?";
-                $params[] = $value;
+                if (is_array($value)) {
+                    // Для масивів використовуємо IN оператор
+                    if (!empty($value)) {
+                        $placeholders = str_repeat('?,', count($value) - 1) . '?';
+                        $whereParts[] = "{$field} IN ({$placeholders})";
+                        foreach ($value as $val) {
+                            $params[] = $val;
+                        }
+                    }
+                } else {
+                    $whereParts[] = "{$field} = ?";
+                    $params[] = $value;
+                }
             }
-            $whereClause = 'WHERE ' . implode(' AND ', $whereParts);
+            if (!empty($whereParts)) {
+                $whereClause = 'WHERE ' . implode(' AND ', $whereParts);
+            }
         }
         
         $sql = "SELECT COUNT(*) FROM {$this->table} {$whereClause}";
