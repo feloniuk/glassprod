@@ -265,7 +265,7 @@ ob_start();
                         <p class="text-muted">Перевірте наявність даних в таблиці або змініть фільтри</p>
                     </div>
                 <?php else: ?>
-                    <canvas id="productivityChart" height="100"></canvas>
+                    <canvas id="productivityChart" height="300"></canvas>
                 <?php endif; ?>
             </div>
         </div>
@@ -284,7 +284,7 @@ ob_start();
                 </h5>
             </div>
             <div class="card-body">
-                <canvas id="hourlyChart" height="80"></canvas>
+                <canvas id="hourlyChart" height="300"></canvas>
             </div>
         </div>
     </div>
@@ -717,5 +717,5 @@ if (dailyCtx) {
 // }, 30000);
 ";
 
-renderDashboardLayout('Аналітика продуктивності', 'director', $content, '', $additionalJS);
+renderDashboardLayout('SCADA - Моніторинг продуктивності', 'director', $content, '', $additionalJS);
 ?>

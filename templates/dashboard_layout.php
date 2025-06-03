@@ -11,6 +11,8 @@ function renderDashboardLayout($pageTitle, $userRole, $content, $additionalCSS =
             'Заявки' => '/dashboard/requests.php',
             'Замовлення' => '/dashboard/orders.php', 
             'Склад' => '/dashboard/warehouse.php',
+            'SCADA' => '/dashboard/analytics.php',
+            'Відеоспостереження' => '/dashboard/surveillance.php',
             'Звіти' => '/dashboard/reports.php',
             'Користувачі' => '/dashboard/users.php'
         ],
@@ -48,7 +50,7 @@ function renderDashboardLayout($pageTitle, $userRole, $content, $additionalCSS =
     <title>{$pageTitle} - {$roleTitle} - GlassProd</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         :root {
             --primary-color: #4fc3f7;
@@ -213,6 +215,8 @@ HTML;
             'Замовлення' => 'fas fa-shopping-cart',
             'Склад' => 'fas fa-warehouse',
             'Звіти' => 'fas fa-chart-bar',
+            'SCADA' => 'fas fa-chart-bar',
+            'Відеоспостереження' => 'fas fa-chart-bar',
             'Користувачі' => 'fas fa-users',
             'Постачальники' => 'fas fa-truck',
             'Матеріали' => 'fas fa-boxes',

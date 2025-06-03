@@ -138,7 +138,7 @@ ob_start();
                     </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="monthlyChart" height="100"></canvas>
+                    <canvas id="monthlyChart" height="300"></canvas>
                 </div>
             </div>
         </div>
@@ -325,7 +325,7 @@ ob_start();
                     </h5>
                 </div>
                 <div class="card-body">
-                    <canvas id="ordersChart" height="100"></canvas>
+                    <canvas id="ordersChart" height="200"></canvas>
                 </div>
             </div>
         </div>
