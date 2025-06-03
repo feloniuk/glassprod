@@ -97,7 +97,12 @@ $supplierFilter = $_GET['supplier'] ?? '';
 $searchFilter = $_GET['search'] ?? '';
 
 // Отримання матеріалів
-$materials = $material->getAllWithCategories();
+try {
+    $materials = $material->getAllWithCategories();
+} catch (Exception $e) {
+    $error = 'Помилка при отриманні матеріалів: ' . $e->getMessage();
+    $materials = [];
+}
 
 // Застосування фільтрів
 if ($categoryFilter) {
@@ -119,8 +124,14 @@ if ($searchFilter) {
 }
 
 // Отримання категорій та постачальників
-$categories = $materialCategory->getAllForSelect();
-$suppliers = $userModel->getSuppliers();
+try {
+    $categories = $materialCategory->getAllForSelect();
+    $suppliers = $userModel->getSuppliers();
+} catch (Exception $e) {
+    $error = 'Помилка при отриманні довідників: ' . $e->getMessage();
+    $categories = [];
+    $suppliers = [];
+}
 
 // Статистика
 $totalMaterials = count($materials);
@@ -548,3 +559,6 @@ function editMaterial(material) {
     new bootstrap.Modal(document.getElementById('editMaterialModal')).show();
 }
 ";
+
+renderDashboardLayout('Матеріали', $user['role'], $content, '', $additionalJS);
+?>

@@ -47,9 +47,11 @@ class PurchaseRequest extends BaseModel {
                     pr.*,
                     m.name as material_name,
                     m.unit as material_unit,
-                    m.price as material_price
+                    m.price as material_price,
+                    u1.full_name as requested_by_name
                 FROM purchase_requests pr
                 LEFT JOIN materials m ON pr.material_id = m.id
+                LEFT JOIN users u1 ON pr.requested_by = u1.id
                 WHERE pr.requested_by = ?
                 ORDER BY pr.request_date DESC";
         
